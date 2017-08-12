@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="../design.css">
+    <script src="../../libs/angular.min.js"></script>
+    <script src="../../libs/ngStorage.min.js"></script>
+</head>
+<script>
+    var app = angular.module("myQues", ['ngStorage']);
+
+    app.factory("quesfactory", ($http, $q) => {
+        var object = {
+            quesServer() {
+                var pr = $q.defer();
+                console.log("Calling Json....");
+                $http.get("../ques.json").then(function(data) {
+                    console.log("Ques are:", data.data);
+                    pr.resolve(data.data);
+                }, function(er) {
+                    console.log("Error", +er);
+                    pr.reject(er);
+                });
+                return pr.promise;
+            }
+        }
+        return object;
+    })
+
+    app.controller("quesctrl", (quesfactory, $scope, $localStorage) => {
+        $scope.datastore = $localStorage;
+        $scope.show = null;
+
+        quesfactory.quesServer().then(function(data) {
+            $scope.show = data;
+        }, function(err) {
+            $scope.show = err;
+        });
+        $scope.qindex = 0;
+        $scope.prev = () => {
+            $scope.show[$scope.qindex].isAnswered = false;
+            $scope.disablebutton2 = false;
+            if ($scope.qindex <= 0) {
+                $scope.disablebutton1 = true;
+            } else {
+                $scope.qindex--;
+            }
+        }
+        $scope.next = () => {
+            console.log("Flag Value", $scope.show[$scope.qindex].isAnswered);
+            $scope.show[$scope.qindex].isAnswered = true;
+            console.log("Flag Value", $scope.show[$scope.qindex].isAnswered);
+            $scope.disablebutton1 = false;
+            if ($scope.qindex >= $scope.show.length - 1) {
+                $scope.disablebutton2 = true;
+            } else {
+                $scope.qindex++;
+            }
+
+        }
+
+        $scope.result = (s) => {
+            console.log("Inside result func...");
+            console.log("Answer value is", $scope.show[$scope.qindex].ans);
+            if (s == $scope.show[$scope.qindex].ans) {
+                alert("Answer is correct");
+                console.log("Answer is correct");
+
+            } else {
+                alert("Wrong Answer");
+                console.log("Wrong Answer");
+            }
+        }
+    });
+</script>
+
+<body ng-app="myQues" ng-controller="quesctrl">
+    <div id="Ques">
+        <h2>Questions</h2>
+        <h3>Welcome {{datastore.name}} </h3>
+        <div class="main-content clearfix">
+            <div class="ques left" ng-repeat="i in show">
+                <div ng-if="qindex==$index">
+                    <p> {{i.qid}}. {{i.ques}} </p>
+                    <ul>
+                        <li ng-repeat="option in i.options">
+                            <input type="radio" ng-model="yourAns" ng-value="yourAns={{option.oid}}" name="choice" ng-click="result(option.oid)" ng-checked="false">{{option.oid}}.{{option.choice}}
+
+                        </li>
+                    </ul>
+                    <button ng-disabled="disablebutton1" ng-click="prev()">Prev</button>
+                    <button ng-disabled="disablebutton2" ng-click="next()">Next</button>
+
+                    <div id="circle" class="right">
+                        <div ng-class="{green:show[0].isAnswered,red:!show[0].isAnswered}"></div>
+                        <div ng-class="{green:show[1].isAnswered,red:!show[1].isAnswered}"></div>
+                        <div ng-class="{green:show[2].isAnswered,red:!show[2].isAnswered}"></div>
+                        <div ng-class="{green:show[3].isAnswered,red:!show[3].isAnswered}"></div>
+                        <div ng-class="{green:show[4].isAnswered,red:!show[4].isAnswered}"></div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</body>
+
+</html>
